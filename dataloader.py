@@ -1,11 +1,10 @@
 import requests
 import investpy as ivpy
 import os
-import locale
 import json
 import pandas as pd
+import numpy as np
 from datetime import datetime as dt
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
@@ -27,16 +26,50 @@ def save_date(date):
     return date.strftime('%Y-%m-%d')
 
 
-def weo(date1, date2):
-    r = requests.get('https://github.com/PerceptronV/Exnate/blob/master/weo_data_oct_2020.xlsx?raw=true')
-    open('weo_dat.xlsx', 'wb').write(r.content)
-    df = pd.read_excel('weo_dat.xlsx')
-    os.remove('weo_dat.xlsx')
+def add_weo(base):
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/weo_data_oct_2020.csv')
+    open('weo_dat.csv', 'wb').write(r.content)
+    df = pd.read_csv('weo_dat.csv').transpose()
+    os.remove('weo_dat.csv')
 
-    df = df.iloc[:, 8:].transpose()
+    cols = []
+    for i in range(df.shape[1]):
+        if df.loc['WEO Country Code'][i] == '112':
+            cols.append('UK: {} /{}'.format(
+                df.loc['Subject Descriptor'][i],
+                df.loc['Units'][i]
+            ))
+        elif df.loc['WEO Country Code'][i] == '111':
+            cols.append('US: {} /{}'.format(
+                df.loc['Subject Descriptor'][i],
+                df.loc['Units'][i]
+            ))
 
+    weo = df.iloc[8:-1, :-2]
+    weo.columns = cols
+    ret = pd.DataFrame()
+    indices = []
 
-    print(df.head())
+    for i in tqdm(list(base.index)):
+        base_dat = base.loc[i]
+
+        if str(i.year) in weo.index:
+            base_dat = pd.concat([base_dat, weo.loc[str(i.year)]])
+            base_dat.name = i
+        else:
+            base_dat = pd.concat([base_dat, pd.DataFrame(
+                [np.nan for e in range(len(cols))]
+            )])
+
+        ret = ret.append(base_dat)
+        indices.append(i)
+
+    ret_cols = list(base.columns)
+    ret_cols.extend(cols)
+    ret.columns = ret_cols
+    ret.index = indices
+
+    return ret
 
 
 def hkd2gbp(date1, date2):
@@ -108,7 +141,7 @@ def sp500(date1, date2):
                                         from_date=date1.strftime('%d/%m/%Y'),
                                         to_date=date2.strftime('%d/%m/%Y'))
     df = df.iloc[:, :4]
-    df = df.rename(lambda x: 'US ARCA: ' + x, axis='columns')
+    df = df.rename(lambda x: 'US SP500: ' + x, axis='columns')
 
     return df
 
@@ -117,8 +150,13 @@ def get_features(date1, date2, args=(
         hkd2gbp, hkd2usd, eur2gbp, ftse100, ftse250, arca, sp500
 )):
     base = pd.DataFrame()
+    print('Loading exchange rate, index and etf data...')
     for func in tqdm(args):
         base = pd.concat([base, func(date1, date2)], axis=1)
+
+    print('Loading national indicator data')
+    base = add_weo(base)
+
     base = create_indices(base)
     base = base.fillna(0)
 
@@ -137,10 +175,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-# data, feats = get_features(dt(2000, 1, 1), dt(2020, 12, 31), args=[])
-# data, feats = get_features(dt(1900, 1, 1), dt(2020, 12, 31))
-# print(data)
-# print(feats)
-
-
-weo(dt(2000, 1, 1), dt(2020, 12, 3))
+get_save(dt(2000, 1, 1), dt(2020, 12, 31), args=[hkd2gbp])
