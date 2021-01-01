@@ -46,28 +46,24 @@ def add_weo(base):
             ))
 
     weo = df.iloc[8:-1, :-2]
-    weo.columns = cols
     ret = pd.DataFrame()
-    indices = []
 
     for i in tqdm(list(base.index)):
-        base_dat = base.loc[i]
+        base_dat = base.loc[i].transpose()
 
         if str(i.year) in weo.index:
-            base_dat = pd.concat([base_dat, weo.loc[str(i.year)]])
-            base_dat.name = i
+            weo_dat = weo.loc[str(i.year)]
+
         else:
-            base_dat = pd.concat([base_dat, pd.DataFrame(
-                [np.nan for e in range(len(cols))]
-            )])
+            weo_dat = pd.DataFrame([np.nan] * len(cols))
 
-        ret = ret.append(base_dat)
-        indices.append(i)
+        weo_dat.columns = cols
+        #print(weo_dat)
+        print(weo_dat.shape)
+        merge_dat = pd.concat([base_dat, weo_dat], axis=1)
+        #print(merge_dat)
 
-    ret_cols = list(base.columns)
-    ret_cols.extend(cols)
-    ret.columns = ret_cols
-    ret.index = indices
+        ret = ret.append(merge_dat)
 
     return ret
 
@@ -175,4 +171,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-get_save(dt(2000, 1, 1), dt(2020, 12, 31), args=[hkd2gbp])
+get_save(dt(1979, 1, 1), dt(1980, 1, 2), args=[hkd2gbp])
