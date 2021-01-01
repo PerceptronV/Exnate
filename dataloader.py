@@ -33,6 +33,9 @@ def weo(date1, date2):
     df = pd.read_excel('weo_dat.xlsx')
     os.remove('weo_dat.xlsx')
 
+    df = df.iloc[:, 8:].transpose()
+
+
     print(df.head())
 
 
