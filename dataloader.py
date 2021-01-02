@@ -34,13 +34,13 @@ def add_weo(base):
 
     cols = []
     for i in range(df.shape[1]):
-        if df.loc['WEO Country Code'][i] == '112.00':
-            cols.append('UK: {} /{}'.format(
+        if df.loc['WEO Country Code'][i] == '112':
+            cols.append('UK: {} /{} fr last yr'.format(
                 df.loc['Subject Descriptor'][i],
                 df.loc['Units'][i]
             ))
-        elif df.loc['WEO Country Code'][i] == '111.00':
-            cols.append('US: {} /{}'.format(
+        elif df.loc['WEO Country Code'][i] == '111':
+            cols.append('US: {} /{} fr last yr'.format(
                 df.loc['Subject Descriptor'][i],
                 df.loc['Units'][i]
             ))
@@ -51,8 +51,8 @@ def add_weo(base):
     indices = list(base.index)
 
     for i in tqdm(range(base.shape[0])):
-        if indices[i].year in weo.index:
-            weo_dat = weo.loc[indices[i].year]
+        if '{}'.format(indices[i].year - 1) in weo.index:
+            weo_dat = weo.loc['{}'.format(indices[i].year - 1)]
             weo_dat = weo_dat.rename(index=indices[i])
 
         else:
@@ -167,4 +167,5 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-get_save(dt(1979, 1, 1), dt(2020, 1, 1))
+get_save(dt(1970, 1, 1), dt(2020, 1, 1))
+# add nasdaq, interest rates, and more IFS data
