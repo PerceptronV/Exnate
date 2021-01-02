@@ -46,26 +46,25 @@ def add_weo(base):
             ))
 
     weo = df.iloc[8:-1, :-2]
-    ret = pd.DataFrame()
+    weo.columns = cols
+    aug = pd.DataFrame()
+    indices = list(base.index)
 
-    for i in tqdm(list(base.index)):
-        base_dat = base.loc[i].transpose()
+    t = weo.iloc[0]
+    t = t.rename(index=indices[0])
 
-        if str(i.year) in weo.index:
-            weo_dat = weo.loc[str(i.year)]
+    for i in tqdm(range(base.shape[0])):
+        if str(indices[i].year) in weo.index:
+            weo_dat = weo.loc[str(indices[i].year)]
+            weo_dat = weo_dat.rename(index=indices[i])
 
         else:
-            weo_dat = pd.DataFrame([np.nan] * len(cols))
+            weo_dat = pd.DataFrame({i:np.nan for i in cols}, index=[indices[i]])
+            weo_dat.columns = cols
 
-        weo_dat.columns = cols
-        #print(weo_dat)
-        print(weo_dat.shape)
-        merge_dat = pd.concat([base_dat, weo_dat], axis=1)
-        #print(merge_dat)
+        aug = aug.append(weo_dat)
 
-        ret = ret.append(merge_dat)
-
-    return ret
+    return pd.concat([base, aug], axis=1)
 
 
 def hkd2gbp(date1, date2):
@@ -150,7 +149,7 @@ def get_features(date1, date2, args=(
     for func in tqdm(args):
         base = pd.concat([base, func(date1, date2)], axis=1)
 
-    print('Loading national indicator data')
+    print('Loading IMF world economic outlook data...')
     base = add_weo(base)
 
     base = create_indices(base)
@@ -171,4 +170,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-get_save(dt(1979, 1, 1), dt(1980, 1, 2), args=[hkd2gbp])
+get_save(dt(1979, 1, 1), dt(2020, 1, 1))
