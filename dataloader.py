@@ -50,9 +50,6 @@ def add_weo(base):
     aug = pd.DataFrame()
     indices = list(base.index)
 
-    t = weo.iloc[0]
-    t = t.rename(index=indices[0])
-
     for i in tqdm(range(base.shape[0])):
         if str(indices[i].year) in weo.index:
             weo_dat = weo.loc[str(indices[i].year)]
@@ -149,13 +146,13 @@ def get_features(date1, date2, args=(
     for func in tqdm(args):
         base = pd.concat([base, func(date1, date2)], axis=1)
 
-    print('Loading IMF world economic outlook data...')
+    print('Loading IMF economic statistics data...')
     base = add_weo(base)
 
     base = create_indices(base)
     base = base.fillna(0)
 
-    features_dict = {e: i for e, i in enumerate(base.columns)}
+    features_dict = {int(e): i for e, i in enumerate(base.columns)}
 
     return base, features_dict
 
@@ -170,4 +167,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-get_save(dt(1979, 1, 1), dt(2020, 1, 1))
+get_save(dt(1979, 1, 1), dt(2020, 1, 1), args = [hkd2gbp])
