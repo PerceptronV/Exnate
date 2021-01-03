@@ -167,5 +167,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-get_save(dt(1970, 1, 1), dt(2020, 1, 1))
 # add nasdaq, interest rates, and more IFS data
