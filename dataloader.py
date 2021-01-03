@@ -26,7 +26,7 @@ def save_date(date):
     return date.strftime('%Y-%m-%d')
 
 
-def add_weo(base):
+def add_imf(base):
     r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/weo_data_oct_2020.csv')
     open('weo_dat.csv', 'wb').write(r.content)
     df = pd.read_csv('weo_dat.csv').transpose()
@@ -138,16 +138,27 @@ def sp500(date1, date2):
     return df
 
 
+def nasdaq(date1, date2):
+    df = ivpy.get_index_historical_data(index='nasdaq',
+                                        country='united states',
+                                        from_date=date1.strftime('%d/%m/%Y'),
+                                        to_date=date2.strftime('%d/%m/%Y'))
+    df = df.iloc[:, :4]
+    df = df.rename(lambda x: 'US SP500: ' + x, axis='columns')
+
+    return df
+
+
 def get_features(date1, date2, args=(
-        hkd2gbp, hkd2usd, eur2gbp, ftse100, ftse250, arca, sp500
+        hkd2gbp, hkd2usd, eur2gbp, ftse100, ftse250, sp500, nasdaq
 )):
     base = pd.DataFrame()
-    print('Loading exchange rate, index and etf data...')
+    print('Loading exchange rate and stock market data...')
     for func in tqdm(args):
         base = pd.concat([base, func(date1, date2)], axis=1)
 
     print('Loading IMF economic statistics data...')
-    base = add_weo(base)
+    base = add_imf(base)
 
     base = create_indices(base)
     base = base.fillna(0)
@@ -167,4 +178,4 @@ def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='featu
     json.dump(feats, open(json_path, 'w'))
 
 
-# add nasdaq, interest rates, and more IFS data
+# add interest rates and more IFS data
