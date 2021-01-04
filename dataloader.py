@@ -7,6 +7,11 @@ import numpy as np
 from datetime import datetime as dt
 from tqdm import tqdm
 
+if not os.path.exists('imfloader.py'):
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/imfloader.py')
+    open('imfloader.py', 'wb').write(r.content)
+from imfloader import get_imf
+
 
 def create_indices(df):
     new_indices = []
@@ -26,7 +31,45 @@ def save_date(date):
     return date.strftime('%Y-%m-%d')
 
 
-def add_imf(base):
+def pad(i):
+    if i < 10:
+        return '0' + str(i)
+    return str(i)
+
+
+def last_month(s):
+    [yr, month] = s.split('-')
+    month = int(month)
+    if month == 1:
+        return '-'.join([str(int(yr) - 1), '12'])
+    return '-'.join([yr, pad(month - 1)])
+
+
+def add_imf_api(base, areas, indicators):
+    try:
+        imf, cols = get_imf(areas, indicators)
+        aug = pd.DataFrame()
+        indices = list(base.index)
+
+        for i in tqdm(range(base.shape[0])):
+            if last_month(indices[i].strftime('%Y-%m')) in imf.index:
+                imf_dat = imf.loc[last_month(indices[i].strftime('%Y-%m'))]
+                imf_dat = imf_dat.rename(index=indices[i])
+
+            else:
+                imf_dat = pd.DataFrame({i: np.nan for i in cols}, index=[indices[i]])
+                imf_dat.columns = cols
+
+            aug = aug.append(imf_dat)
+
+        return pd.concat([base, aug], axis=1)
+
+    except:
+        print('Error in data collection')
+        return base
+
+
+def add_imf_legacy(base):
     r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/weo_data_oct_2020.csv')
     open('weo_dat.csv', 'wb').write(r.content)
     df = pd.read_csv('weo_dat.csv').transpose()
@@ -149,16 +192,37 @@ def nasdaq(date1, date2):
     return df
 
 
+def chunks(lst, n):
+    lst = list(lst)
+    ret = []
+    for i in range(0, len(lst), n):
+        ret.append(lst[i:i + n])
+
+    return ret
+
+
 def get_features(date1, date2, args=(
         hkd2gbp, hkd2usd, eur2gbp, ftse100, ftse250, sp500, nasdaq
-)):
+), imf_areas=('HK', 'GB', 'US'), imf_indicators=(
+    'AIP_SA_IX', 'AOMPC_IX', 'NGDP_SA_XDC', 'NC_GDP_PT', 'NFI_SA_XDC', 'NGDPNPI_SA_XDC', 'NX_SA_XDC', 'NXS_SA_XDC', 'NSDGDP_R_CH_SA_XDC', 'NYGDP_XDC',
+    'ARS_IX', 'ENEER_IX', 'NYFC_XDC', 'NYG_SA_XDC', 'NYP_XDC', 'BFDA_BP6_USD', 'BFOAE_BP6_USD', 'BFPAE_BP6_USD', 'BFPLXF_BP6_USD', 'FISR_PA',
+    'FITB_IX', 'FMVB_IX', 'NNL_SA_XDC', 'NSG_XDC', 'NYG_SA_XDC', 'PCPI_PC_PP_PT', 'NM_XDC', 'LUR_PC_PP_PT', 'LUR_PT', 'LP_PE_NUM',
+    'FPE_IX', 'LE_IX', 'BCG_GRTI_G01_CA_XDC', 'FIDR_ON_PA', 'BCG_GRTGS_G01_XDC', 'BCG_GX_G01_XDC', 'BCG_GXOB_G01_XDC', 'BFDAE_BP6_USD', 'BCG_GXCBG_G01_XDC', 'BCG_GXOBP_G01_XDC',
+    'LWR_IX', 'NGDP_D_SA_IX', 'FMD_SA_USD', 'GG_GALM_G01_XDC', '26N___XDC', 'NM_SA_XDC', 'TMG_CIF_PC_PP_PT',
+    'NGDP_R_K_IX', 'PPPIFG_IX', 'TMG_D_CIF_IX', 'PMP_IX', 'PCPI_IX', 'PPPI_IX', 'PXP_IX',
+), legacy=True):
     base = pd.DataFrame()
     print('Loading exchange rate and stock market data...')
     for func in tqdm(args):
         base = pd.concat([base, func(date1, date2)], axis=1)
 
-    print('Loading IMF economic statistics data...')
-    base = add_imf(base)
+    if not legacy:
+        print('Loading IMF International Financial Statistics data...')
+        for ind in tqdm(chunks(imf_indicators, 10)):
+            base = add_imf_api(base, imf_areas, ind)
+
+    print('Loading IMF World Economic Outlook data...')
+    base = add_imf_legacy(base)
 
     base = create_indices(base)
     base = base.fillna(0)
@@ -168,11 +232,11 @@ def get_features(date1, date2, args=(
     return base, features_dict
 
 
-def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='feature_names.json'):
+def get_save(date1, date2, args=None, csv_path='full_data_beta.csv', json_path='feature_names_beta.json', legacy=False):
     if args is None:
-        data, feats = get_features(date1, date2)
+        data, feats = get_features(date1, date2, legacy=legacy)
     else:
-        data, feats = get_features(date1, date2, args)
+        data, feats = get_features(date1, date2, args, legacy=legacy)
 
     data.to_csv(csv_path)
     json.dump(feats, open(json_path, 'w'))
