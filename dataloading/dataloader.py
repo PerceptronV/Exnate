@@ -8,7 +8,7 @@ from datetime import datetime as dt
 from tqdm import tqdm
 
 if not os.path.exists('imfloader.py'):
-    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/imfloader.py')
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/dataloading/imfloader.py')
     open('imfloader.py', 'wb').write(r.content)
 from imfloader import get_imf
 
@@ -70,7 +70,7 @@ def add_imf_api(base, areas, indicators):
 
 
 def add_imf_legacy(base):
-    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/weo_data_oct_2020.csv')
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/dataloading/weo_data_oct_2020.csv')
     open('weo_dat.csv', 'wb').write(r.content)
     df = pd.read_csv('weo_dat.csv').transpose()
     os.remove('weo_dat.csv')
@@ -232,7 +232,7 @@ def get_features(date1, date2, args=(
     return base, features_dict
 
 
-def get_save(date1, date2, args=None, csv_path='full_data_beta.csv', json_path='feature_names_beta.json', beta=False):
+def get_save(date1, date2, args=None, csv_path='full_data.csv', json_path='feature_names.json', beta=False):
     if args is None:
         data, feats = get_features(date1, date2, beta=beta)
     else:
@@ -240,6 +240,3 @@ def get_save(date1, date2, args=None, csv_path='full_data_beta.csv', json_path='
 
     data.to_csv(csv_path)
     json.dump(feats, open(json_path, 'w'))
-
-
-# add interest rates and more IFS data
