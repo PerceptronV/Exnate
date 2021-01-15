@@ -37,9 +37,11 @@ This repo contains the source code to load financial data for the Exnate project
 
 3. In the `get_features` or `get_save` functions, specify start date and end date with Python datetime objects; specify additional argument `beta=True` if you'd like to download IMF IFS dataset too
     
-    * Fully downloaded features are already available: [full_data.csv](full_data.csv) and [full_data_beta.csv](full_data_beta.csv);
+    * Fully downloaded features from 1979-12-27 to 2020-01-01 are already available in [full_data.csv](full_data.csv) and [full_data_beta.csv](full_data_beta.csv);
     
-    * together with their respective feature dictionaries, mapping the _i_ th column to its feature name: [feature_names.json](feature_names.json), [feature_names_beta.json](feature_names_beta.json)
+    * together with their respective feature dictionaries, mapping the _i_ th feature to its name: [feature_names.json](feature_names.json), [feature_names_beta.json](feature_names_beta.json)
+    
+    * Alternatively, you can generate these files by running `get_full_data.py`
     
     * _Due to a bug, the keys in the feature dictionaries are strings of the _i_ th feature, not numbers_
     

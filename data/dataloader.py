@@ -8,7 +8,7 @@ from datetime import datetime as dt
 from tqdm import tqdm
 
 if not os.path.exists('imfloader.py'):
-    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/dataloading/imfloader.py')
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/data/imfloader.py')
     open('imfloader.py', 'wb').write(r.content)
 from imfloader import get_imf
 
@@ -70,7 +70,7 @@ def add_imf_api(base, areas, indicators):
 
 
 def add_imf_legacy(base):
-    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/dataloading/weo_data_oct_2020.csv')
+    r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/data/weo_data_oct_2020.csv')
     open('weo_dat.csv', 'wb').write(r.content)
     df = pd.read_csv('weo_dat.csv').transpose()
     os.remove('weo_dat.csv')
