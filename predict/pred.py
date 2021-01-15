@@ -1,6 +1,8 @@
 import requests
 r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/train/models.py')
 open('models.py', 'wb').write(r.content)
+r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/data/dataloader.py')
+open('dataloader.py', 'wb').write(r.content)
 
 import json
 import numpy as np
@@ -29,8 +31,14 @@ def predict(date1, date2):
 
 def build():
   print('Building model by passing in real data...')
-  _ = predict(dt(2018, 11, 1), dt(2019, 1, 3))
-  pred_model.load_weights(weights_fname)
+  pred_df = get_features(dt(2018, 11, 1), dt(2019, 1, 3))[0]
+
+  pred_data = np.asarray(
+      pred_df.values,
+      dtype=np.float32
+  )
+  pred_features, pred_residuals = pred_preprocess(pred_data, data_param, model_param)
+  result = pred_model(pred_features, pred_residuals)
 
 
 subdir = 'downloads/'
@@ -51,5 +59,8 @@ pred_model = ForecastModel(model_param['input_shape'], model_param['residual_sha
 # Build run
 build()
 
-print('Main prediction: ')
+# Load weights
+pred_model.load_weights(subdir + weights_fname)
+
+print('\nMain prediction: ')
 _ = predict(dt(2020, 11, 1), dt(2021, 1, 3))
