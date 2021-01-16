@@ -22,7 +22,7 @@ def init_params():
     HIST_LEN = 7
 
     # Indices of the features to be fed into the model at each time step
-    FEAT = [i for i in range(data.shape[-1])]
+    FEAT = [i for i in range(data.shape[-1])] # This will feed all available indices
 
     # The number of days the model will need to predict into the future
     PRED_LEN = 3
@@ -30,7 +30,7 @@ def init_params():
     # Indices of the labels to be predicted by the model at each time step
     LAB = [i for i in range(4)]
 
-    # Whether your RNN model will return sequences
+    # Whether your RNN model will return the outputs generated at all time steps
     RET_SQN = True
 
     # Batch size
