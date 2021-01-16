@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 from tqdm import tqdm
+import warnings
 
 if not os.path.exists('imfloader.py'):
     r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/data/imfloader.py')
@@ -45,13 +46,18 @@ def last_month(s):
     return '-'.join([yr, pad(month - 1)])
 
 
-def add_imf_api(base, areas, indicators):
+def add_imf_api(base, areas, indicators, progress):
     try:
-        imf, cols = get_imf(areas, indicators)
+        imf, cols = get_imf(areas, indicators, progress=progress)
         aug = pd.DataFrame()
         indices = list(base.index)
 
-        for i in tqdm(range(base.shape[0])):
+        if progress:
+            iter = tqdm(range(base.shape[0]))
+        else:
+            iter = range(base.shape[0])
+
+        for i in iter:
             if last_month(indices[i].strftime('%Y-%m')) in imf.index:
                 imf_dat = imf.loc[last_month(indices[i].strftime('%Y-%m'))]
                 imf_dat = imf_dat.rename(index=indices[i])
@@ -65,11 +71,11 @@ def add_imf_api(base, areas, indicators):
         return pd.concat([base, aug], axis=1)
 
     except:
-        print('Error in data collection')
+        warnings.warn('Error in data collection')
         return base
 
 
-def add_imf_legacy(base):
+def add_imf_legacy(base, progress):
     r = requests.get('https://raw.githubusercontent.com/PerceptronV/Exnate/master/data/weo_data_oct_2020.csv')
     open('weo_dat.csv', 'wb').write(r.content)
     df = pd.read_csv('weo_dat.csv').transpose()
@@ -93,7 +99,12 @@ def add_imf_legacy(base):
     aug = pd.DataFrame()
     indices = list(base.index)
 
-    for i in tqdm(range(base.shape[0])):
+    if progress:
+        iter = tqdm(range(base.shape[0]))
+    else:
+        iter = range(base.shape[0])
+
+    for i in iter:
         if '{}'.format(indices[i].year - 1) in weo.index:
             weo_dat = weo.loc['{}'.format(indices[i].year - 1)]
             weo_dat = weo_dat.rename(index=indices[i])
@@ -210,19 +221,32 @@ def get_features(date1, date2, args=(
     'FPE_IX', 'LE_IX', 'BCG_GRTI_G01_CA_XDC', 'FIDR_ON_PA', 'BCG_GRTGS_G01_XDC', 'BCG_GX_G01_XDC', 'BCG_GXOB_G01_XDC', 'BFDAE_BP6_USD', 'BCG_GXCBG_G01_XDC', 'BCG_GXOBP_G01_XDC',
     'LWR_IX', 'NGDP_D_SA_IX', 'FMD_SA_USD', 'GG_GALM_G01_XDC', '26N___XDC', 'NM_SA_XDC', 'TMG_CIF_PC_PP_PT',
     'NGDP_R_K_IX', 'PPPIFG_IX', 'TMG_D_CIF_IX', 'PMP_IX', 'PCPI_IX', 'PPPI_IX', 'PXP_IX',
-), beta=False):
+), beta=False, progress=True):
     base = pd.DataFrame()
-    print('Loading exchange rate and stock market data...')
-    for func in tqdm(args):
+
+    if progress:
+        print('Loading exchange rate and stock market data...')
+        iter = tqdm(args)
+    else:
+        iter = args
+
+    for func in iter:
         base = pd.concat([base, func(date1, date2)], axis=1)
 
     if beta:
-        print('Loading IMF International Financial Statistics data...')
-        for ind in tqdm(chunks(imf_indicators, 10)):
-            base = add_imf_api(base, imf_areas, ind)
+        if progress:
+            print('Loading IMF International Financial Statistics data...')
+            iter = tqdm(chunks(imf_indicators, 10))
+        else:
+            iter = chunks(imf_indicators, 10)
 
-    print('Loading IMF World Economic Outlook data...')
-    base = add_imf_legacy(base)
+        for ind in iter:
+            base = add_imf_api(base, imf_areas, ind, progress=progress)
+
+    if progress:
+        print('Loading IMF World Economic Outlook data...')
+
+    base = add_imf_legacy(base, progress=progress)
 
     base = create_indices(base)
     base = base.fillna(0)

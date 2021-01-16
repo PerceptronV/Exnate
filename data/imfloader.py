@@ -37,7 +37,8 @@ def get_dataset_struct(db, save=False, fname='datastruct.json'):
     return codes
 
 
-def get_imf(areas: list, keys: list, db='IFS', f='M', date1='', date2='', save=False, fname='imf_data.csv'):
+def get_imf(areas: list, keys: list, db='IFS', f='M', date1='', date2='',
+            save=False, fname='imf_data.csv', progress=True):
     url = BASEURL + COMPACTKEY.format(
         db, f, '+'.join(list(areas)), '+'.join(list(keys)), date1, date2
     )
@@ -48,7 +49,12 @@ def get_imf(areas: list, keys: list, db='IFS', f='M', date1='', date2='', save=F
     df = pd.DataFrame()
     key2des = get_dataset_struct(db)['Indicator']
 
-    for i in tqdm(data):
+    if progress:
+        iter = tqdm(data)
+    else:
+        iter = data
+
+    for i in iter:
         cols.append('{}: {}'.format(
             i['@REF_AREA'], key2des[i['@INDICATOR']]
         ))

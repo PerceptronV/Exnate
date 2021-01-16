@@ -1,8 +1,4 @@
-import requests
-
 import numpy as np
-import pandas as pd
-from dataloader import load_date, get_features
 
 
 def pred_standardize(arr, data_param):
