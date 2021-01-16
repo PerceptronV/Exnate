@@ -21,7 +21,7 @@ To visualize data and model architecture, run `train_interactive.py`.
 
 Various Python files and datafiles (CSVs) will be downloaded in both processes. 
 
-Model checkpoints will be stored by default in the 'checkpoints/' subdirectory. You can configure this, and other default settings, by editing the `init_params()` function in either Python files.
+Model checkpoints will be stored by default in the `'./checkpoints/'` subdirectory. You can configure this, and other default settings, by editing the `init_params()` function in either Python files.
 
 Sample `init_params()` function:
 
@@ -59,7 +59,7 @@ def init_params():
 
 #### Structure of checkpoints
 
-Under your checkpoints directory, you will find these files, under the following structure:
+After training, you will find the following files under your checkpoints directory:
 
 ```
 {checkpoint dir}
@@ -80,10 +80,10 @@ Under your checkpoints directory, you will find these files, under the following
 
 After training, there a few vital files to store for later use. These files are:
 
-* `data_params.json`: all of your hyperparameters regarding data, features selection, predictoin length etc.
+* `data_params.json`: contains all of your hyperparameters regarding data, features selection, predictoin length etc.
 
-* `model_params.json`: all of the hyperparameters relating to your model
+* `model_params.json`: contains all of the hyperparameters relating to your model
 
-* Go into your checkpoints directory and open  `main_log.txt`. Look over the training losses and choose the best model out of all the epochs. Save the `weights.h5` file in that epoch.
+* `weights.h5`: Go into your checkpoints directory and open  `main_log.txt`. Look over the training losses and choose the best model out of all the epochs. Save the weights file in that epoch.
 
- Downloaded Python files don't need to be stored. Several image files may also be generated if you choose to run `train_interactive.py`. These won't have to be reused later.
+ Downloaded Python files don't need to be stored. Several image files may also be generated if you choose to run `train_interactive.py`. These also don't need to be saved, unless you like them 😉!

@@ -1,1 +1,0 @@
-{"input_shape": [7, 72], "residual_shape": [7, 3, 4], "output_shape": [7, 3, 4], "return_sequences": true, "rnn_units": 512}

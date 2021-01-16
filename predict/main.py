@@ -4,7 +4,8 @@ from pred import build, predict
 from models import ForecastModel
 from get_params import get_params
 
-subdir = 'downloads/'
+subdir = 'downloads/' # Default hyperparams subdirectory
+
 data_param_fname = 'data_params.json'
 model_param_fname = 'model_params.json'
 feat_fname = 'feature_names.json'
