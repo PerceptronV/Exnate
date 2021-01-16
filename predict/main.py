@@ -1,8 +1,8 @@
 import json
-from get_params import get_params
-from models import ForecastModel
-from pred import build, predict
 from datetime import datetime as dt
+from pred import build, predict
+from models import ForecastModel
+from get_params import get_params
 
 subdir = 'downloads/'
 data_param_fname = 'data_params.json'
@@ -12,6 +12,7 @@ weights_fname = 'weights.h5'
 
 print('Getting model dependencies...')
 get_params(subdir, data_param_fname, model_param_fname, feat_fname, weights_fname)
+
 data_param = json.load(open(subdir + data_param_fname, 'r'))
 model_param = json.load(open(subdir + model_param_fname, 'r'))
 feature_names = json.load(open(subdir + feat_fname, 'r'))

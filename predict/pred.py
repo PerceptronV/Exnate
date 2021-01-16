@@ -14,7 +14,7 @@ def predict(date1, date2, pred_model, data_param, model_param, feature_names, pr
 
     if interpret:
         print('Data given to model: ')
-        print(pred_df.iloc[-data_param['hist_len']:,:4])
+        print(pred_df.iloc[-data_param['hist_len']:])
 
     pred_data = np.asarray(
         pred_df.values,
